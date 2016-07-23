@@ -1,0 +1,29 @@
+{
+  "name": "ruliweb_deals",
+  "version": "0.0.1",
+  "description": "@ruliweb_deals",
+  "main": "ruliweb_deals.js",
+  "scripts": {
+    "start": "pm2 start ./app.json",
+    "stop": "pm2 stop ./app.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sapphiredev/ruliweb_deals.git"
+  },
+  "author": "sapphire <info@sapphire.sh>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sapphiredev/ruliweb_deals/issues"
+  },
+  "homepage": "https://github.com/sapphiredev/ruliweb_deals#readme",
+  "dependencies": {
+    "jsdom": "^7.2.1",
+    "knex": "^0.9.0",
+    "mysql": "^2.9.0",
+    "node-schedule": "^1.1.0",
+    "sqlite3": "^3.1.2",
+    "twit": "^2.1.1",
+    "underscore": "^1.8.3"
+  }
+}

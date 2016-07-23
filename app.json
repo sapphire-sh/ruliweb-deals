@@ -1,0 +1,4 @@
+{
+	"name": "@ruliweb_deals",
+	"script": "./src/app.js"
+}
