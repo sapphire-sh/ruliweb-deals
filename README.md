@@ -1,2 +1,2 @@
-# gcrb_bot
-@gcrb_bot
+# ruliweb_deals
+@ruliweb_deals
