@@ -5,6 +5,7 @@ let app = new App();
 
 describe('@ruliweb_deals', function() {
 	it('parse', function(done) {
+		this.timeout(20000);
 		app.parse(1900, 0).then(() => {
 			done();
 		});
