@@ -27,4 +27,6 @@ build/Release
 node_modules
 
 config.js
-*.db
+*.sqlite
+.coveralls.yml
+

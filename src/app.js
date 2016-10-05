@@ -1,167 +1,218 @@
 'use strict';
 
-const CONFIG = require('../config');
+const config = require('../config');
 
-const _ = require('underscore');
-const jsdom = require('jsdom');
-const schedule = require('node-schedule');
-const knex = require('knex')(CONFIG.knex);
-const twit = new (require('twit'))(CONFIG.twitter);
+let knex = require('knex')(config.knex);
+let twit = new (require('twit'))(config.twitter);
 
-const TABLE_NAME = 'ruliweb_deals';
+let request = require('request');
+let cheerio = require('cheerio');
+
+const table_name = 'ruliweb_deals';
 
 let LATEST_ID;
-
-knex.schema.hasTable(TABLE_NAME)
-.then((exists) => {
-	if(exists) {
-		return Promise.resolve();
-	}
-	else {
-		return knex.schema.createTableIfNotExists(TABLE_NAME, (table) => {
-			table.increments();
-			table.integer('rid').notNullable();
-			table.string('title').notNullable();
-			table.string('link').notNullable();
-			table.integer('tweet', 1).notNullable();
-			table.timestamp('created_at').defaultTo(knex.fn.now());
-		});
-	}
-})
-.then(() => {
-		start();
-		schedule.scheduleJob('*/2 * * * *', start);
-});
-
-function start() {
-	knex(TABLE_NAME)
-	.limit(1)
-	.then(function(rows) {
-		LATEST_ID = (rows.length === 0 ? 5 : rows[0].rid);
-		parse()
-		.then(function(rows) {
-			rows = rows.reverse();
-			insert(rows);
-		});
-	});
-}
-
-function parse(page) {
-	page = (page === undefined ? 1 : page);
-	
-	const URL = `http://bbs.ruliweb.com/news/board/1020/list?page=${page}`;
-	
-	return new Promise((resolve, reject) => {
-		jsdom.env(URL, ['http://code.jquery.com/jquery.js'], (err, window) => {
-			const $ = window.$;
-			
-			const rows = $('.board_list_table > tbody > tr:not(.notice) > td');
-			
-			let data = [];
-			
-			let rid;
-			let title;
-			let link;
-			rows.each(function(i) {
-				switch(i % 7) {
-				case 0:
-					rid = $(this).text().trim();
-					break;
-				case 1:
-					break;
-				case 2:
-					title = $(this).find('a').text().trim();
-					link = $(this).find('a').attr('href');
-					break;
-				case 6:
-					data.push({
-						rid: rid,
-						title: title,
-						link: link,
-						tweet: 0
-					});
-					
-					break;
-				}
-			});
-			
-			window.close();
-			if(data.length > 0) {
-				if(data[data.length - 1].rid > LATEST_ID) {
-					parse(page + 1)
-					.then(function(rows) {
-						data = _.union(data, rows);
-						resolve(data);
-					});
-				}
-				else {
-					resolve(data);
-				}
+class App {
+	constructor() {
+		let self = this;
+		
+		knex.schema.hasTable(table_name).then((exists) => {
+			if(exists) {
+				return Promise.resolve();
 			}
 			else {
-				resolve([]);
+				return knex.schema.createTableIfNotExists(table_name, (table) => {
+					table.integer('id').primary().notNullable();
+					table.string('type').notNullable();
+					table.string('title').notNullable();
+					table.string('link').notNullable();
+					table.integer('tweet', 1).notNullable();
+					table.timestamp('created_at').defaultTo(knex.fn.now());
+				});
 			}
-		});
-	});
-}
-
-function insert(data) {
-	data.reduce((prev, curr) => {
-		return prev.then(() => {
-			return knex(TABLE_NAME)
-			.where('rid', curr.rid)
-			.then((rows) => {
-				if(rows.length === 0) {
-					return knex(TABLE_NAME).insert(curr);
-				}
-				else {
-					return Promise.resolve();
-				}
-			});
-		});
-	}, Promise.resolve())
-	.then(() => {
-		knex(TABLE_NAME)
-		.where('tweet', 0)
-		.then((rows) => {
-			rows.reduce((prev, curr) => {
-				return prev.then(() => {
-					return tweet(curr)
-					.then(function() {
-						return knex(TABLE_NAME)
-						.where('id', curr.id)
-						.update('tweet', 1);
+		}).then(() => {
+			if(process.env.NODE_ENV !== 'test') {
+				Promise.resolve(0).then(function loop(i) {
+					console.log(i);
+					
+					return self.start().then((id) => {
+						return self.parse(id, 1).then(function loop(data) {
+							if(data.items.length > 0) {
+								return self.insert(data.items, id, data.page).then((data) => {
+									return self.parse(id, data.page + 1);
+								}).then(loop).catch((e) => {
+									console.log(e);
+								});
+							}
+							else {
+								return Promise.resolve();
+							}
+						}).catch((e) => {
+							console.log(e);
+						});
+					}).then(() => {
+						return self.tweet();
+					}).then(() => {
+						return new Promise((resolve, reject) => {
+							setTimeout(() => {
+								resolve(i + 1);
+							}, 60 * 1000);
+						});
+					}).then(loop).catch((e) => {
+						console.log(e);
 					});
 				});
-			}, Promise.resolve())
-			.then(() => {});
-		})
-		.catch((err) => {
-			console.log(err);
+			}
+		}).catch((e) => {
+			console.log(e);
 		});
-	})
-	.catch((err) => {
-		console.log(err);
-	});
+	}
+	
+	start() {
+		let self = this;
+		
+		return new Promise((resolve, reject) => {
+			knex(table_name).orderBy('id', 'desc').limit(1).then((rows) => {
+				if(rows.length === 0) {
+					resolve(1900);
+				}
+				else {
+					resolve(rows[0].id);
+				}
+			}).catch((e) => {
+				console.log(e);
+			});
+		});
+	}
+	
+	parse(id, page) {
+		const url = `http://bbs.ruliweb.com/news/board/1020/list?page=${page}`;
+		
+		let data = {
+			items: [],
+			id: id,
+			page: page
+		};
+		
+		return new Promise((resolve, reject) => {
+			request(url, (err, res, body) => {
+				if(!err && res.statusCode === 200) {
+					let $ = cheerio.load(body);
+					
+					let items = [];
+					
+					$('table.board_list_table tr.table_body:not(.notice)').each((i, e) => {
+						let item = {};
+						
+						item.tweet = 0;
+						
+						$(e).find('td').each((i, e) => {
+							let str = $(e).text().trim();
+							switch(i) {
+							case 0:
+								item.id = str;
+								break;
+							case 1:
+								item.type = str;
+								break;
+							case 2:
+								item.title = $(e).find('a').text().trim();
+								item.link = $(e).find('a').attr('href');
+								
+								break;
+							}
+						});
+						
+						if(parseInt(item.id) > id) {
+							items.push(item);
+						}
+					});
+					
+					data.items = items;
+				}
+				resolve(data);
+			});
+		});
+	}
+	
+	insert(items, id, page) {
+		let self = this;
+		
+		return new Promise((resolve, reject) => {
+			let promises = items.map((item) => {
+				return knex(table_name).where({
+					id: item.id
+				}).then((rows) => {
+					if(rows.length === 0) {
+						return knex(table_name).insert(item);
+					}
+					else {
+						return Promise.resolve();
+					}
+				}).catch((e) => {
+					console.log(e);
+				});
+			});
+			Promise.all(promises).then(() => {
+				resolve({
+					id: id,
+					page: page
+				});
+			}).catch((e) => {
+				console.log(e);
+			});
+		});
+	}
+	
+	tweet() {
+		let self = this;
+		
+		return new Promise((resolve, reject) => {
+			knex(table_name).where({
+				tweet: 0
+			}).then((rows) => {
+				let promises = rows.map((row) => {
+					return new Promise((resolve, reject) => {
+						let title = row.title;
+						let type = row.type;
+						let status = `[${type}]\n${title}\n`;
+						if(status.length > 111) {
+							title = `${title.substr(0, 110)}…`;
+							status = `[${type}]\n${title}\n`;
+						}
+						status += row.link;
+						
+						twit.post('statuses/update', {
+							status: status
+						}, (err, res) => {
+							if(err) {
+								throw new Error(err);
+							}
+							
+							knex(table_name).where({
+								id: row.id
+							}).update({
+								tweet: 1
+							}).then(() => {
+								resolve();
+							}).catch((e) => {
+								console.log(e);
+							});
+						});
+					});
+				});
+				Promise.all(promises).then(() => {
+					resolve();
+				}).catch((e) => {
+					console.log(e);
+				});
+			});
+		});
+	}
 }
 
-function tweet(data) {
-	return new Promise((resolve, reject) => {
-		let title = data.title;
-		if(title.length >= 117) {
-			title = title.substr(0, 117 - 2) + '…';
-		}
-		let link = data.link;
-		let status = `${title}\n${link}`;
-		
-		twit.post('statuses/update', {
-			status: status
-		}, (err, res) => {
-			if(err) {
-				console.log(err);
-			}
-			resolve();
-		});
-	});
+if(process.env.NODE_ENV !== 'test') {
+	let app = new App();
 }
+
+module.exports = App;
 
