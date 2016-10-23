@@ -13,7 +13,7 @@ let cheerio = require('cheerio');
 
 const table_name = 'ruliweb_deals';
 
-let LATEST_ID = 2276;
+let LATEST_ID = 2280;
 class App {
 	constructor() {
 		let self = this;
@@ -58,7 +58,7 @@ class App {
 						return new Promise((resolve, reject) => {
 							setTimeout(() => {
 								resolve(i + 1);
-							}, 5 * 60 * 1000);
+							}, 60 * 1000);
 						});
 					}).then(loop).catch((e) => {
 						console.log(e);
@@ -90,7 +90,7 @@ class App {
 	}
 	
 	parse(id, page) {
-		const url = `http://bbs.ruliweb.com.prx.teleport.to/news/board/1020/list?page=${page}`;
+		const url = `http://bbs.ruliweb.com/news/board/1020/list?page=${page}`;
 		
 		let data = {
 			items: [],
@@ -99,7 +99,10 @@ class App {
 		};
 		
 		return new Promise((resolve, reject) => {
-			request(url, (err, res, body) => {
+			request({
+				url: url,
+				timeout: 10000
+			}, (err, res, body) => {
 				if(!err && res.statusCode === 200) {
 					let $ = cheerio.load(body);
 					
