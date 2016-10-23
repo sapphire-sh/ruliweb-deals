@@ -13,7 +13,7 @@ let cheerio = require('cheerio');
 
 const table_name = 'ruliweb_deals';
 
-let LATEST_ID;
+let LATEST_ID = 2276;
 class App {
 	constructor() {
 		let self = this;
@@ -38,7 +38,9 @@ class App {
 					console.log(i);
 					
 					return self.start().then((id) => {
+console.log(id);
 						return self.parse(id, 1).then(function loop(data) {
+console.log(data);
 							if(data.items.length > 0) {
 								return self.insert(data.items, id, data.page).then((data) => {
 									return self.parse(id, data.page + 1);
@@ -58,11 +60,13 @@ class App {
 						return new Promise((resolve, reject) => {
 							setTimeout(() => {
 								resolve(i + 1);
-							}, 60 * 1000);
+							}, 5 * 60 * 1000);
 						});
 					}).then(loop).catch((e) => {
 						console.log(e);
 					});
+				}).catch((e) => {
+					console.log(e);
 				});
 			}
 		}).catch((e) => {
@@ -76,7 +80,7 @@ class App {
 		return new Promise((resolve, reject) => {
 			knex(table_name).orderBy('id', 'desc').limit(1).then((rows) => {
 				if(rows.length === 0) {
-					resolve(1900);
+					resolve(LATEST_ID);
 				}
 				else {
 					resolve(rows[0].id);
@@ -98,6 +102,7 @@ class App {
 		
 		return new Promise((resolve, reject) => {
 			request(url, (err, res, body) => {
+console.log(err);
 				if(!err && res.statusCode === 200) {
 					let $ = cheerio.load(body);
 					
@@ -124,13 +129,16 @@ class App {
 								break;
 							}
 						});
-						
+						console.log(parseInt(item.id), id);
 						if(parseInt(item.id) > id) {
 							items.push(item);
 						}
 					});
 					
 					data.items = items;
+				}
+				else {
+					console.log(err);
 				}
 				resolve(data);
 			});
@@ -208,6 +216,8 @@ class App {
 				}).catch((e) => {
 					console.log(e);
 				});
+			}).catch((e) => {
+				console.log(e);
 			});
 		});
 	}
