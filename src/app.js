@@ -38,9 +38,7 @@ class App {
 					console.log(i);
 					
 					return self.start().then((id) => {
-console.log(id);
 						return self.parse(id, 1).then(function loop(data) {
-console.log(data);
 							if(data.items.length > 0) {
 								return self.insert(data.items, id, data.page).then((data) => {
 									return self.parse(id, data.page + 1);
@@ -92,7 +90,7 @@ console.log(data);
 	}
 	
 	parse(id, page) {
-		const url = `http://bbs.ruliweb.com/news/board/1020/list?page=${page}`;
+		const url = `http://bbs.ruliweb.com.prx.teleport.to/news/board/1020/list?page=${page}`;
 		
 		let data = {
 			items: [],
@@ -102,7 +100,6 @@ console.log(data);
 		
 		return new Promise((resolve, reject) => {
 			request(url, (err, res, body) => {
-console.log(err);
 				if(!err && res.statusCode === 200) {
 					let $ = cheerio.load(body);
 					
@@ -129,7 +126,7 @@ console.log(err);
 								break;
 							}
 						});
-						console.log(parseInt(item.id), id);
+						
 						if(parseInt(item.id) > id) {
 							items.push(item);
 						}
