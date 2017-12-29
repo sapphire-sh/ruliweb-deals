@@ -184,21 +184,7 @@ class App {
 				let promises = rows.map((row) => {
 					return new Promise((resolve, reject) => {
 						let title = row.title;
-						let type = row.type;
-						let status = `[${type}]\n${title}\n`;
-						if(status.length > 111) {
-							title = `${title.substr(0, 110)}…`;
-							status = `[${type}]\n${title}\n`;
-						}
-						status += row.link;
-						
-						twit.post('statuses/update', {
-							status: status
-						}, (err, res) => {
-							if(err) {
-								throw new Error(err);
-							}
-							
+						if(title === '') {
 							knex(table_name).where({
 								id: row.id
 							}).update({
@@ -208,7 +194,34 @@ class App {
 							}).catch((e) => {
 								console.log(e);
 							});
-						});
+						}
+						else {
+							let type = row.type;
+							let status = `[${type}]\n${title}\n`;
+							if(status.length > 111) {
+								title = `${title.substr(0, 110)}…`;
+								status = `[${type}]\n${title}\n`;
+							}
+							status += row.link;
+							
+							twit.post('statuses/update', {
+								status: status
+							}, (err, res) => {
+								if(err) {
+									throw new Error(err);
+								}
+								
+								knex(table_name).where({
+									id: row.id
+								}).update({
+									tweet: 1
+								}).then(() => {
+									resolve();
+								}).catch((e) => {
+									console.log(e);
+								});
+							});
+						}
 					});
 				});
 				Promise.all(promises).then(() => {
