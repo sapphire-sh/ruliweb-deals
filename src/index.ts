@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 'use strict';
 
 const config = require('../config');
@@ -14,16 +16,16 @@ let cheerio = require('cheerio');
 const table_name = 'ruliweb_deals';
 
 let LATEST_ID = 2280;
-class App {
+export class App {
 	constructor() {
 		let self = this;
-		
+
 		knex.schema.hasTable(table_name).then((exists) => {
 			if(exists) {
 				return Promise.resolve();
 			}
 			else {
-				return knex.schema.createTableIfNotExists(table_name, (table) => {
+				return knex.schema.createTable(table_name, (table) => {
 					table.integer('id').primary().notNullable();
 					table.string('type').notNullable();
 					table.string('title').notNullable();
@@ -36,11 +38,11 @@ class App {
 			if(process.env.NODE_ENV !== 'test') {
 				Promise.resolve(0).then(function loop(i) {
 					console.log(i);
-					
+
 					return self.start().then((id) => {
-						return self.parse(id, 1).then(function loop(data) {
+						return self.parse(id, 1).then(function loop(data: any) {
 							if(data.items.length > 0) {
-								return self.insert(data.items, id, data.page).then((data) => {
+								return self.insert(data.items, id, data.page).then((data: any) => {
 									return self.parse(id, data.page + 1);
 								}).then(loop).catch((e) => {
 									console.log(e);
@@ -54,7 +56,7 @@ class App {
 						});
 					}).then(() => {
 						return self.tweet();
-					}).then(() => {
+					}).then<number>(() => {
 						return new Promise((resolve, reject) => {
 							setTimeout(() => {
 								resolve(i + 1);
@@ -71,10 +73,8 @@ class App {
 			console.log(e);
 		});
 	}
-	
+
 	start() {
-		let self = this;
-		
 		return new Promise((resolve, reject) => {
 			knex(table_name).orderBy('id', 'desc').limit(1).then((rows) => {
 				if(rows.length === 0) {
@@ -88,16 +88,16 @@ class App {
 			});
 		});
 	}
-	
+
 	parse(id, page) {
 		const url = `http://bbs.ruliweb.com/news/board/1020/list?page=${page}`;
-		
+
 		let data = {
 			items: [],
 			id: id,
 			page: page
 		};
-		
+
 		return new Promise((resolve, reject) => {
 			request({
 				url: url,
@@ -105,14 +105,14 @@ class App {
 			}, (err, res, body) => {
 				if(!err && res.statusCode === 200) {
 					let $ = cheerio.load(body);
-					
+
 					let items = [];
-					
+
 					$('table.board_list_table tr.table_body:not(.notice)').each((i, e) => {
-						let item = {};
-						
+						let item: any = {};
+
 						item.tweet = 0;
-						
+
 						$(e).find('td').each((i, e) => {
 							let str = $(e).text().trim();
 							switch(i) {
@@ -125,16 +125,16 @@ class App {
 							case 2:
 								item.title = $(e).find('a').text().trim();
 								item.link = $(e).find('a').attr('href');
-								
+
 								break;
 							}
 						});
-						
+
 						if(parseInt(item.id) > id) {
 							items.push(item);
 						}
 					});
-					
+
 					data.items = items;
 				}
 				else {
@@ -144,10 +144,8 @@ class App {
 			});
 		});
 	}
-	
+
 	insert(items, id, page) {
-		let self = this;
-		
 		return new Promise((resolve, reject) => {
 			let promises = items.map((item) => {
 				return knex(table_name).where({
@@ -173,10 +171,8 @@ class App {
 			});
 		});
 	}
-	
+
 	tweet() {
-		let self = this;
-		
 		return new Promise((resolve, reject) => {
 			knex(table_name).where({
 				tweet: 0
@@ -203,14 +199,14 @@ class App {
 								status = `[${type}]\n${title}\n`;
 							}
 							status += row.link;
-							
+
 							twit.post('statuses/update', {
 								status: status
 							}, (err, res) => {
 								if(err) {
 									throw new Error(err);
 								}
-								
+
 								knex(table_name).where({
 									id: row.id
 								}).update({
@@ -235,10 +231,3 @@ class App {
 		});
 	}
 }
-
-if(process.env.NODE_ENV !== 'test') {
-	let app = new App();
-}
-
-module.exports = App;
-

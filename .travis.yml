@@ -2,9 +2,6 @@ language: node_js
 
 node_js:
   - "node"
-  - "6"
-  - "5"
-  - "4"
 
 sudo: false
 
@@ -18,4 +15,3 @@ notifications:
 after_success:
   - rm ruliweb_deals.sqlite
   - npm run coveralls
-

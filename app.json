@@ -1,4 +1,4 @@
 {
 	"name": "@ruliweb_deals",
-	"script": "./src/app.js"
+	"script": "./dist/main.js"
 }
