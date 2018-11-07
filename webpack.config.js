@@ -3,6 +3,8 @@ const path = require('path');
 const webpack = require('webpack');
 const nodeExternals = require('webpack-node-externals');
 
+const config = require('./config');
+
 const env = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
 module.exports = {
@@ -30,6 +32,10 @@ module.exports = {
 		],
 	},
 	'plugins': [
+		new webpack.DefinePlugin({
+			'__test': false,
+			'__config': JSON.stringify(config),
+		}),
 		new webpack.DefinePlugin({
 			'__dev': process.env.NODE_ENV === 'development',
 			'__test': process.env.NODE_ENV === 'test',

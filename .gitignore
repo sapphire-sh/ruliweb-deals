@@ -27,6 +27,6 @@ build/Release
 node_modules
 
 config.js
+/dist
 *.sqlite
 .coveralls.yml
-
