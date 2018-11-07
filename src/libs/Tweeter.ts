@@ -55,12 +55,10 @@ export class Tweeter {
 
 			if(title !== '') {
 				const status = [
-					type,
+					`[${type}]`,
 					title.substr(0, 140),
 					link,
-				].map((e) => {
-					return `[${e}]`;
-				}).join('\n');
+				].join('\n');
 
 				await this.sendTweet(status);
 			}
