@@ -2,14 +2,12 @@
   "name": "ruliweb_deals",
   "version": "1.0.0",
   "description": "@ruliweb_deals",
-  "main": "./src/app.js",
+  "main": "./dist/main.js",
   "scripts": {
     "build": "webpack",
-    "prestart:dev": "cross-env NODE_ENV=development npm run build",
-    "start:dev": "node ./dist/main.js",
-    "prestart": "cross-env NODE_ENV=production npm run build",
-    "start": "pm2 start ./app.json",
-    "stop": "pm2 stop ./app.json",
+    "build:dev": "cross-env NODE_ENV=development npm run build",
+    "build:prod": "cross-env NODE_ENV=production npm run build",
+    "start": "node ./dist/main.js",
     "test": "jest --no-cache --verbose",
     "coverage": "jest --coverage --no-cache",
     "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls"
