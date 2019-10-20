@@ -5,46 +5,26 @@ import {
 } from '~/libs';
 
 import {
-	Item,
-} from '~/models';
-
-import {
 	sleep,
 } from '~/helpers';
 
 export class App {
 	private readonly database: Database;
+	private readonly parser: Parser;
 	private readonly tweeter: Tweeter;
 
 	public constructor() {
 		this.database = new Database();
+		this.parser = new Parser();
 		this.tweeter = new Tweeter(__config);
 	}
 
-	public async initialize() {
-		Parser.createInstance();
-	}
-
 	public async start() {
-		const parser = Parser.getInstance();
-
 		if (__test === false) {
 			try {
 				const lastID = await this.database.getLastID();
 
-				let items: Item[] = [];
-				let page = 0;
-				do {
-					items = await parser.parse(lastID, page);
-					for (const item of items) {
-						await this.database.insertItem(item);
-					}
-
-					console.log(items.length);
-
-					page++;
-				}
-				while (items.length > 0);
+				const items = await this.parser.parse();
 			}
 			catch (err) {
 				console.trace(err);

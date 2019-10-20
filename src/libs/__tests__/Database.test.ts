@@ -123,4 +123,18 @@ describe('libs/Database', () => {
 			expect(nextItem!.tweet).toBe(1);
 		});
 	});
+
+	describe('getLastID', () => {
+		test('success', async () => {
+			const id = await database.getLastID();
+			expect(id).toBe(prevItem.id);
+		});
+
+		test('success - default id', async () => {
+			await database.flush();
+
+			const id = await database.getLastID();
+			expect(id).toBe(database.defaultID);
+		});
+	});
 });
