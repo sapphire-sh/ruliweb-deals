@@ -1,18 +1,16 @@
 language: node_js
 
 node_js:
-#   - "node"
   - "10"
 
 sudo: false
 
 script:
-  - cp config.sample.js config.js
-  - npm test
+  - npm run lint
+  - npm run test
 
 notifications:
   email: false
 
 after_success:
-  - rm ruliweb_deals.sqlite
-  - npm run coveralls
+  - npx codecov

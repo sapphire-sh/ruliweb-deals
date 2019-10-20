@@ -1,16 +1,20 @@
-FROM node:11
+FROM node:alpine
 
-RUN mkdir /opt/src
-WORKDIR /opt/src
+RUN mkdir -p /opt/project
+WORKDIR /opt/project
 
-VOLUME [ "/opt/src/data" ]
+RUN node --version
+RUN npm --version
 
-COPY package*.json ./
+RUN apk update \
+		&& apk add --no-cache git
+
+COPY package* ./
 
 RUN npm install
 
 COPY . .
 
-RUN npm run build:prod
+RUN npm run build
 
 CMD [ "npm", "start" ]

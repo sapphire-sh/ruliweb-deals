@@ -1,107 +1,100 @@
-import Knex from 'knex';
+import _ from 'lodash';
+
+import IORedis from 'ioredis';
+
+import IORedisMock from 'ioredis-mock';
 
 import {
 	Item,
-} from '../models';
+} from '~/models';
+
+import {
+	serializeItem,
+	deserializeItem,
+} from '~/helpers';
 
 export class Database {
-	private static instance: Database | null = null;
+	private readonly redis: IORedis.Redis;
 
-	private TABLE_NAME = 'ruliweb_deals';
-	private LAST_ID = 21760;
-
-	private knex: Knex;
-
-	private constructor(config: Knex.Config) {
-		this.knex = Knex(config);
+	public constructor() {
+		this.redis = __test ? new IORedisMock() : new IORedis(process.env.REDIS_HOST);
 	}
 
-	public static createInstance(config: Knex.Config) {
-		if(this.instance !== null) {
-			return;
-		}
-		this.instance = new Database(config);
+	public get key(): string {
+		return 'ruliweb_deals';
 	}
 
-	public static getInstance(): Database {
-		if(this.instance === null) {
-			throw new Error('database instance is not created');
-		}
-		return this.instance;
+	public get defaultID(): number {
+		return 32576;
 	}
 
-	public async initialize() {
-		try {
-			const exists = await this.knex.schema.hasTable(this.TABLE_NAME);
-			if(exists) {
-				return;
-			}
-			return this.knex.schema.createTable(this.TABLE_NAME, (table) => {
-				table.integer('id').primary().notNullable();
-				table.string('type').notNullable();
-				table.string('title').notNullable();
-				table.string('link').notNullable();
-				table.integer('tweet').notNullable();
-				table.timestamp('created_at').defaultTo(this.knex!.fn.now());
-			});
-		}
-		catch(err) {
-			console.trace(err);
-		}
+	public async flush(): Promise<void> {
+		await this.redis.flushall();
 	}
 
-	public async insert(item: Item) {
-		try {
-			const rows = await this.knex(this.TABLE_NAME).where({
-				'id': item.id,
-			});
+	public async getItem(id: number): Promise<Item | null> {
+		const field = id.toString();
+		const res = await this.redis.hget(this.key, field);
 
-			if(rows.length === 0) {
-				await this.knex(this.TABLE_NAME).insert(item);
-			}
+		if (res === null) {
+			return null;
 		}
-		catch(err) {
-			console.trace(err);
-		}
+		return deserializeItem(res);
 	}
 
-	public async update(id: string) {
-		if(this.knex === null) {
-			return;
-		}
+	public async getItems(): Promise<Item[]> {
+		const res: { [key: string]: string; } = await this.redis.hgetall(this.key);
 
-		try {
-			await this.knex(this.TABLE_NAME).where({
-				'id': id,
-			}).update({
-				'tweet': 1,
-			});
-		}
-		catch(err) {
-			console.trace(err);
-		}
-	}
-
-	public async getLastID(): Promise<number> {
-		try {
-			const rows = await this.knex(this.TABLE_NAME).orderBy('id', 'desc').limit(1);
-			if(rows.length === 1) {
-				const lastID = parseInt(rows[0].id, 10);
-				if(this.LAST_ID > lastID) {
-					return this.LAST_ID;
-				}
-				return lastID;
-			}
-		}
-		catch(err) {
-			console.trace(err);
-		}
-		return this.LAST_ID;
+		const items = Object.values(res).map(x => deserializeItem(x));
+		return items.filter((x): x is Item => x !== null);
 	}
 
 	public async getUntweetedItems(): Promise<Item[]> {
-		return this.knex(this.TABLE_NAME).where({
-			'tweet': 0,
-		});
+		const items = await this.getItems();
+		return items.filter((x): x is Item => x !== null).filter(x => x.tweet === 0);
+	}
+
+	public async insertItem(nextItem: Item): Promise<boolean> {
+		const id = nextItem.id;
+
+		const prevItem = await this.getItem(id);
+		if (prevItem !== null) {
+			return false;
+		}
+
+		const value = serializeItem(nextItem);
+		const field = nextItem.id.toString();
+		await this.redis.hset(this.key, field, value);
+
+		return true;
+	}
+
+	public async updateItem(nextItem: Item): Promise<boolean> {
+		const id = nextItem.id;
+
+		const prevItem = await this.getItem(id);
+		if (prevItem === null) {
+			return false;
+		}
+		if (prevItem.tweet === 1) {
+			return false;
+		}
+		if (_.isEqual(prevItem, nextItem)) {
+			return false;
+		}
+
+		const value = serializeItem(nextItem);
+		const field = nextItem.id.toString();
+		await this.redis.hset(this.key, field, value);
+
+		return true;
+	}
+
+	public async getLastID(): Promise<number> {
+		const items = await this.getItems();
+		if (items.length === 0) {
+			return this.defaultID;
+		}
+		return items.sort((a, b) => (a.id - b.id)).pop()!.id;
 	}
 }

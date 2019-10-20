@@ -3,51 +3,51 @@ const path = require('path');
 const webpack = require('webpack');
 const nodeExternals = require('webpack-node-externals');
 
-const config = require('./config');
+const rootPath = path.resolve(__dirname);
+const srcPath = path.resolve(rootPath, 'src');
+const distPath = path.resolve(rootPath, 'dist');
 
-const env = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+const config = require(process.env.TRAVIS === 'true' ? './config.sample' : './config');
 
 module.exports = {
-	'entry': path.resolve(__dirname, 'src', 'index.ts'),
+	'entry': path.resolve(srcPath, 'index.ts'),
 	'output': {
-		'path': path.resolve(__dirname, 'dist'),
+		'path': distPath,
 		'filename': 'main.js',
 	},
 	'module': {
 		'rules': [
 			{
-				'test': /\.tsx?$/,
-				'use': [
-					'ts-loader',
-				],
+				'test': /\.ts$/,
+				'use': 'ts-loader',
 			},
-		],
-	},
-	'devtool': 'source-map',
-	'resolve': {
-		'extensions': [
-			'.ts',
-			'.js',
-			'.json',
+			{
+				'test': /\.txt$/,
+				'loader': 'list-loader',
+			},
 		],
 	},
 	'plugins': [
 		new webpack.DefinePlugin({
-			'__test': false,
+			'__test': process.env.NODE_ENV === 'test',
 			'__config': JSON.stringify(config),
 		}),
-		new webpack.DefinePlugin({
-			'__dev': process.env.NODE_ENV === 'development',
-			'__test': process.env.NODE_ENV === 'test',
-		}),
-		new webpack.ProgressPlugin(),
 	],
 	'target': 'node',
-	'node': {
-		'__dirname': true,
-	},
+	'devtool': false,
 	'externals': [
 		nodeExternals(),
 	],
-	'mode': env,
+	'resolve': {
+		'extensions': [
+			'.ts',
+			'.tsx',
+			'.js',
+			'.json',
+		],
+		'alias': {
+			'~': srcPath,
+		},
+	},
+	'mode': process.env.NODE_ENV === 'dev' ? 'development' : 'production',
 };

@@ -1,8 +1,4 @@
 import {
-	Database,
-} from '../libs';
-
-import {
 	Item,
 } from '../models';
 
@@ -63,8 +59,8 @@ export class Tweeter {
 				await this.sendTweet(status);
 			}
 
-			const database = Database.getInstance();
-			await database.update(id);
+			// const database = Database.getInstance();
+			// await database.update(id);
 		}
 		catch(err) {
 			console.trace(err);

@@ -2,42 +2,41 @@ import {
 	Database,
 	Parser,
 	Tweeter,
-} from './libs';
+} from '~/libs';
 
 import {
 	Item,
-} from './models';
+} from '~/models';
 
 import {
 	sleep,
-} from './helpers';
+} from '~/helpers';
 
 export class App {
-	public async initialize() {
-		Database.createInstance(__config.knex);
-		Parser.createInstance();
-		Tweeter.createInstance(__config.twitter);
+	private readonly database: Database;
 
-		const database = Database.getInstance();
-
-		await database.initialize();
+	public constructor() {
+		this.database = new Database();
 	}
 
-	public async process() {
-		const database = Database.getInstance();
+	public async initialize() {
+		Parser.createInstance();
+	}
+
+	public async start() {
 		const parser = Parser.getInstance();
 		const tweeter = Tweeter.getInstance();
 
 		if(__test === false) {
 			try {
-				const lastID = await database.getLastID();
+				const lastID = await this.database.getLastID();
 
 				let items: Item[] = [];
 				let page = 0;
 				do {
 					items = await parser.parse(lastID, page);
 					for(const item of items) {
-						await database.insert(item);
+						await this.database.insertItem(item);
 					}
 
 					console.log(items.length);
@@ -53,7 +52,7 @@ export class App {
 
 		if(__test === false) {
 			try {
-				const items = await database.getUntweetedItems();
+				const items = await this.database.getUntweetedItems();
 
 				console.log(items);
 
