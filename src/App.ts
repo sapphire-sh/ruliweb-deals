@@ -1,3 +1,5 @@
+import schedule from 'node-schedule';
+
 import {
 	Database,
 	Parser,
@@ -19,32 +21,29 @@ export class App {
 		this.tweeter = new Tweeter(__config);
 	}
 
+	private async parse(): Promise<void> {
+		const items = await this.parser.parse();
+		for (const item of items) {
+			await this.database.insertItem(item);
+		}
+	}
+
+	private async tweet(): Promise<void> {
+		const items = await this.database.getUntweetedItems();
+		for (const item of items) {
+			await this.tweeter.tweetItem(item);
+			await this.database.updateItem(item);
+			await sleep(1000);
+		}
+	}
+
 	public async start() {
-		if (__test === false) {
-			try {
-				const lastID = await this.database.getLastID();
+		schedule.scheduleJob('* * * * *', async () => {
+			const date = new Date();
+			console.log('parse', date);
 
-				const items = await this.parser.parse();
-			}
-			catch (err) {
-				console.trace(err);
-			}
-		}
-
-		if (__test === false) {
-			try {
-				const items = await this.database.getUntweetedItems();
-
-				console.log(items);
-
-				for (const item of items) {
-					await this.tweeter.tweetItem(item);
-					await sleep(5000);
-				}
-			}
-			catch (err) {
-				console.trace(err);
-			}
-		}
+			await this.parse();
+			await this.tweet();
+		});
 	}
 }
