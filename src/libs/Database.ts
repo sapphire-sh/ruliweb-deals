@@ -62,6 +62,10 @@ export class Database {
 			return false;
 		}
 
+		if (id <= this.defaultID) {
+			nextItem.tweet = 1;
+		}
+
 		const value = serializeItem(nextItem);
 		const field = nextItem.id.toString();
 		await this.redis.hset(this.key, field, value);
