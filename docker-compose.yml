@@ -5,8 +5,6 @@ services:
     build: .
     environment:
       - REDIS_HOST=redis
-    ports:
-      - 5102:5102
     networks:
       - redis
     depends_on:
