@@ -14,9 +14,11 @@ import {
 
 export class App {
 	private readonly database: Database;
+	private readonly tweeter: Tweeter;
 
 	public constructor() {
 		this.database = new Database();
+		this.tweeter = new Tweeter(__config);
 	}
 
 	public async initialize() {
@@ -25,9 +27,8 @@ export class App {
 
 	public async start() {
 		const parser = Parser.getInstance();
-		const tweeter = Tweeter.getInstance();
 
-		if(__test === false) {
+		if (__test === false) {
 			try {
 				const lastID = await this.database.getLastID();
 
@@ -35,7 +36,7 @@ export class App {
 				let page = 0;
 				do {
 					items = await parser.parse(lastID, page);
-					for(const item of items) {
+					for (const item of items) {
 						await this.database.insertItem(item);
 					}
 
@@ -43,25 +44,25 @@ export class App {
 
 					page++;
 				}
-				while(items.length > 0);
+				while (items.length > 0);
 			}
-			catch(err) {
+			catch (err) {
 				console.trace(err);
 			}
 		}
 
-		if(__test === false) {
+		if (__test === false) {
 			try {
 				const items = await this.database.getUntweetedItems();
 
 				console.log(items);
 
-				for(const item of items) {
-					await tweeter.tweet(item);
+				for (const item of items) {
+					await this.tweeter.tweetItem(item);
 					await sleep(5000);
 				}
 			}
-			catch(err) {
+			catch (err) {
 				console.trace(err);
 			}
 		}

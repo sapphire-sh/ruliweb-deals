@@ -9,11 +9,11 @@ import {
 
 describe('helpers/serializeItem', () => {
 	const prevItem: Item = {
-		id: 10,
-		link: '',
-		title: '',
+		id: 32576,
+		type: 'A/V',
+		title: '[A/V] [Drop] 젠하이저 HD6XX HEADPHONES ($195/미국FS)',
+		link: 'https://bbs.ruliweb.com/news/board/1020/read/32576',
 		tweet: 0,
-		type: '',
 	};
 
 	test('success', () => {
