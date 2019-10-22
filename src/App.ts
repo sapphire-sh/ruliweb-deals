@@ -32,6 +32,7 @@ export class App {
 		const items = await this.database.getUntweetedItems();
 		for (const item of items) {
 			await this.tweeter.tweetItem(item);
+			item.tweet = 1;
 			await this.database.updateItem(item);
 			await sleep(1000);
 		}
