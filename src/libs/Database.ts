@@ -25,7 +25,7 @@ export class Database {
 	}
 
 	public get defaultID(): number {
-		return 32655;
+		return 37225;
 	}
 
 	public async flush(): Promise<void> {
