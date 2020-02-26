@@ -25,7 +25,7 @@ export class Database {
 	}
 
 	public get defaultID(): number {
-		return 37225;
+		return 37339;
 	}
 
 	public async flush(): Promise<void> {
@@ -57,13 +57,16 @@ export class Database {
 	public async insertItem(nextItem: Item): Promise<boolean> {
 		const id = nextItem.id;
 
-		const prevItem = await this.getItem(id);
-		if (prevItem !== null) {
-			return false;
-		}
-
 		if (id <= this.defaultID) {
 			nextItem.tweet = 1;
+		}
+		const prevItem = await this.getItem(id);
+		if (prevItem !== null) {
+			if (prevItem.tweet === -1) {
+				prevItem.tweet = 0;
+				await this.updateItem(prevItem);
+			}
+			return false;
 		}
 
 		const value = serializeItem(nextItem);

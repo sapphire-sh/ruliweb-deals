@@ -44,7 +44,7 @@ export class App {
 	}
 
 	public async start() {
-		schedule.scheduleJob('* * * * *', async () => {
+		schedule.scheduleJob('*/2 * * * *', async () => {
 			const date = new Date();
 			console.log('parse', date);
 
