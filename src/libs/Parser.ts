@@ -24,7 +24,7 @@ export class Parser {
 			}
 			const type = $(column[1]).text().trim();
 			const title = $(column[2]).find('a').text().trim();
-			const link = $(column[2]).find('a').attr('href');
+			const link = $(column[2]).find('a').attr('href') ?? '';
 			const tweet = -1;
 
 			return { id, type, title, link, tweet };
