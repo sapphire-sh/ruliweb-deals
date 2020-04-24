@@ -19,7 +19,24 @@ export class Tweeter {
 		await this.twit.post('statuses/update', { status });
 	}
 
+	private shouldTweet(text: string): boolean {
+		const words = [
+			'covid',
+			'코로나',
+		];
+		const x = text.toLowerCase();
+		for (const word of words) {
+			if (x.indexOf(word) !== -1) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public async tweetItem(item: Item): Promise<void> {
+		if (this.shouldTweet(item.title) === false) {
+			return;
+		}
 		const status = composeTweet(item);
 		await this.tweet(status);
 	}
