@@ -20,6 +20,9 @@ export class Tweeter {
 	}
 
 	private shouldTweet(text: string): boolean {
+		if (__config.access_token === 'access_token') {
+			return false;
+		}
 		const words = [
 			'covid',
 			'코로나',
