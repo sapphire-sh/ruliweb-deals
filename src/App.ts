@@ -1,6 +1,6 @@
+import { sleep } from '@sapphire-sh/utils';
 import IORedis from 'ioredis';
 import schedule from 'node-schedule';
-import { sleep } from '~/helpers';
 import { Database, Parser, Tweeter } from '~/libs';
 
 export class App {

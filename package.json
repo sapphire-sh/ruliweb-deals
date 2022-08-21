@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/sapphiredev/ruliweb-deals#readme",
   "dependencies": {
+    "@sapphire-sh/utils": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
     "ioredis": "^5.2.2",
     "node-schedule": "^2.1.0",
