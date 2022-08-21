@@ -6,6 +6,7 @@ module.exports = {
 			'isolatedModules': true,
 		},
 		'__test': true,
+		'__config': {},
 	},
     moduleNameMapper: {
 	  '~/(.*)': '<rootDir>/src/$1',
