@@ -1,30 +1,15 @@
-import _ from 'lodash';
-
 import IORedis from 'ioredis';
-
-import IORedisMock from 'ioredis-mock';
-
-import {
-	Item,
-} from '~/models';
-
-import {
-	serializeItem,
-	deserializeItem,
-} from '~/helpers';
+import { deserializeItem, itemEquals, serializeItem } from '~/helpers';
+import { Item } from '~/models';
 
 export class Database {
-	private readonly redis: IORedis.Redis;
-
-	public constructor() {
-		this.redis = __test ? new IORedisMock() : new IORedis(process.env.REDIS_HOST);
-	}
+	public constructor(private readonly redis: IORedis.Redis) {}
 
 	public get key(): string {
 		return 'ruliweb_deals';
 	}
 
-	public get defaultID(): number {
+	public get defaultId(): number {
 		return 49304;
 	}
 
@@ -43,21 +28,21 @@ export class Database {
 	}
 
 	public async getItems(): Promise<Item[]> {
-		const res: { [key: string]: string; } = await this.redis.hgetall(this.key);
+		const res: { [key: string]: string } = await this.redis.hgetall(this.key);
 
-		const items = Object.values(res).map(x => deserializeItem(x));
+		const items = Object.values(res).map((x) => deserializeItem(x));
 		return items.filter((x): x is Item => x !== null);
 	}
 
 	public async getUntweetedItems(): Promise<Item[]> {
 		const items = await this.getItems();
-		return items.filter((x): x is Item => x !== null).filter(x => x.tweet === 0);
+		return items.filter((x): x is Item => x !== null).filter((x) => x.tweet === 0);
 	}
 
 	public async insertItem(nextItem: Item): Promise<boolean> {
 		const id = nextItem.id;
 
-		if (id <= this.defaultID) {
+		if (id <= this.defaultId) {
 			nextItem.tweet = 1;
 		}
 		const prevItem = await this.getItem(id);
@@ -86,7 +71,7 @@ export class Database {
 		if (prevItem.tweet === 1) {
 			return false;
 		}
-		if (_.isEqual(prevItem, nextItem)) {
+		if (itemEquals(prevItem, nextItem)) {
 			return false;
 		}
 
@@ -97,11 +82,11 @@ export class Database {
 		return true;
 	}
 
-	public async getLastID(): Promise<number> {
+	public async getLastId(): Promise<number> {
 		const items = await this.getItems();
 		if (items.length === 0) {
-			return this.defaultID;
+			return this.defaultId;
 		}
-		return items.sort((a, b) => (a.id - b.id)).pop()!.id;
+		return items.sort((a, b) => a.id - b.id).pop()!.id;
 	}
 }

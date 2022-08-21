@@ -1,12 +1,6 @@
 import Twit from 'twit';
-
-import {
-	Item,
-} from '~/models';
-
-import {
-	composeTweet,
-} from '~/helpers';
+import { composeTweet } from '~/helpers';
+import { Item } from '~/models';
 
 export class Tweeter {
 	private readonly twit: Twit;
@@ -23,10 +17,7 @@ export class Tweeter {
 		if (__config.access_token === 'access_token') {
 			return false;
 		}
-		const words = [
-			'covid',
-			'코로나',
-		];
+		const words = ['covid', '코로나'];
 		const x = text.toLowerCase();
 		for (const word of words) {
 			if (x.indexOf(word) !== -1) {

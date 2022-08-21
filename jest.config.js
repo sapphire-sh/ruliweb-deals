@@ -3,17 +3,15 @@ module.exports = {
 	testEnvironment: 'node',
 	globals: {
 		'ts-jest': {
-			'isolatedModules': true,
+			isolatedModules: true,
 		},
-		'__test': true,
-		'__config': {},
+		__test: true,
+		__config: {},
 	},
-    moduleNameMapper: {
-	  '~/(.*)': '<rootDir>/src/$1',
-      '\\.txt$': '<rootDir>/src/list.mock.ts',
-    },
+	moduleNameMapper: {
+		'~/(.*)': '<rootDir>/src/$1',
+		'\\.txt$': '<rootDir>/src/list.mock.ts',
+	},
 	rootDir: '.',
-	collectCoverageFrom: [
-		'src/**/*.{js,ts}'
-	],
+	collectCoverageFrom: ['src/**/*.{js,ts}'],
 };

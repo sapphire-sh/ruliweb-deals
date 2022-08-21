@@ -1,13 +1,14 @@
-import {
-	App,
-} from './App';
+import { App } from './App';
+
+const main = async () => {
+	const app = new App();
+	await app.start();
+};
 
 (async () => {
 	try {
-		const app = new App();
-		await app.start();
-	}
-	catch (err) {
-		console.log(err);
+		await main();
+	} catch (error) {
+		console.log(error);
 	}
 })();

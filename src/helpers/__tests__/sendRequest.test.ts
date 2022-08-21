@@ -1,6 +1,4 @@
-import {
-	sendRequest,
-} from '../sendRequest';
+import { sendRequest } from '../sendRequest';
 
 describe('helpers/sendRequest', () => {
 	test('success', async () => {
@@ -9,8 +7,6 @@ describe('helpers/sendRequest', () => {
 	});
 
 	test('failure', async () => {
-		await expect(
-			sendRequest('http://httpstat.us/500'),
-		).rejects.toThrowError();
+		await expect(sendRequest('http://httpstat.us/500')).rejects.toThrowError();
 	});
 });

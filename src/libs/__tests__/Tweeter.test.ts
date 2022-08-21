@@ -1,14 +1,6 @@
-import {
-	Item,
-} from '~/models';
-
-import {
-	composeTweet,
-} from '~/helpers';
-
-import {
-	Tweeter,
-} from '../Tweeter';
+import { composeTweet } from '~/helpers';
+import { Item } from '~/models';
+import { Tweeter } from '../Tweeter';
 
 describe('libs/Tweeter', () => {
 	class TestTweeter extends Tweeter {

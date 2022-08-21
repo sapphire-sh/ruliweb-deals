@@ -1,11 +1,5 @@
-import {
-	Item,
-} from '~/models';
-
-import {
-	serializeItem,
-	deserializeItem,
-} from '../serializeItem';
+import { Item } from '~/models';
+import { deserializeItem, serializeItem } from '../serializeItem';
 
 describe('helpers/serializeItem', () => {
 	const prevItem: Item = {

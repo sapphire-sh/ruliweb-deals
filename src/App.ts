@@ -1,14 +1,7 @@
+import IORedis from 'ioredis';
 import schedule from 'node-schedule';
-
-import {
-	Database,
-	Parser,
-	Tweeter,
-} from '~/libs';
-
-import {
-	sleep,
-} from '~/helpers';
+import { sleep } from '~/helpers';
+import { Database, Parser, Tweeter } from '~/libs';
 
 export class App {
 	private readonly database: Database;
@@ -16,7 +9,9 @@ export class App {
 	private readonly tweeter: Tweeter;
 
 	public constructor() {
-		this.database = new Database();
+		const redis = new IORedis();
+
+		this.database = new Database(redis);
 		this.parser = new Parser();
 		this.tweeter = new Tweeter(__config);
 	}
@@ -36,8 +31,7 @@ export class App {
 				item.tweet = 1;
 				await this.database.updateItem(item);
 				await sleep(1000);
-			}
-			catch (error) {
+			} catch (error) {
 				console.log(error);
 			}
 		}

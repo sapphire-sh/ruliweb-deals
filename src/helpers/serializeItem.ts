@@ -1,16 +1,13 @@
-import {
-	Item,
-} from '~/models';
+import { Item } from '~/models';
 
-export function serializeItem(item: Item): string {
+export const serializeItem = (item: Item): string => {
 	return JSON.stringify(item);
-}
+};
 
-export function deserializeItem(value: string): Item | null {
+export const deserializeItem = (value: string): Item | null => {
 	try {
 		return JSON.parse(value);
-	}
-	catch {
+	} catch {
 		return null;
 	}
-}
+};

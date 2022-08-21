@@ -1,17 +1,7 @@
 import cheerio from 'cheerio';
-
-import {
-	TABLE_SELECTOR,
-} from '~/constants';
-
-import {
-	Item,
-} from '~/models';
-
-import {
-	getURL,
-	sendRequest,
-} from '~/helpers';
+import { TABLE_SELECTOR } from '~/constants';
+import { getURL, sendRequest } from '~/helpers';
+import { Item } from '~/models';
 
 export class Parser {
 	public parseItem($: CheerioStatic, e: CheerioElement): Item | null {
@@ -28,8 +18,7 @@ export class Parser {
 			const tweet = -1;
 
 			return { id, type, title, link, tweet };
-		}
-		catch (error) {
+		} catch (error) {
 			console.log(error);
 			return null;
 		}
@@ -44,7 +33,9 @@ export class Parser {
 		const items: Item[] = [];
 		$(TABLE_SELECTOR).each((i, e) => {
 			const item = this.parseItem($, e);
-			if (item === null) { return; }
+			if (item === null) {
+				return;
+			}
 			items.push(item);
 		});
 		return items;

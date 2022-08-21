@@ -1,6 +1,4 @@
-import {
-	Parser,
-} from '../Parser';
+import { Parser } from '../Parser';
 
 describe('libs/Parser', () => {
 	const parser = new Parser();

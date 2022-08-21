@@ -1,63 +1,66 @@
-import _ from "lodash";
+import faker from 'faker';
+import IORedis from 'ioredis-mock';
+import { Item } from '~/models';
+import { Database } from '../Database';
 
-import faker from "faker";
-
-import { Item } from "~/models";
-
-import { Database } from "../Database";
-
-describe("libs/Database", () => {
-	const getRandomItem = (defaultId: number): Item => {
-		return {
-			id: faker.random.number() + defaultId + 1,
-			type: faker.random.alphaNumeric(8),
-			title: faker.random.alphaNumeric(8),
-			link: faker.random.alphaNumeric(8),
-			tweet: 0,
-		};
+const getRandomItem = (defaultId: number): Item => {
+	return {
+		id: faker.random.number() + defaultId + 1,
+		type: faker.random.alphaNumeric(8),
+		title: faker.random.alphaNumeric(8),
+		link: faker.random.alphaNumeric(8),
+		tweet: 0,
 	};
+};
 
-	const database = new Database();
-	const prevItem = getRandomItem(database.defaultID);
+describe('libs/Database', () => {
+	let database: Database;
+	let prevItem: Item;
+
+	beforeAll(() => {
+		const redis = new IORedis();
+		database = new Database(redis);
+	});
 
 	beforeEach(async () => {
+		prevItem = getRandomItem(database.defaultId);
+
 		await database.flush();
 		await database.insertItem(prevItem);
 	});
 
-	describe("getItem", () => {
-		test("success", async () => {
+	describe('getItem', () => {
+		test('success', async () => {
 			const item = await database.getItem(prevItem.id);
 			expect(item).not.toBeNull();
 		});
 
-		test("failure - not found", async () => {
+		test('failure - not found', async () => {
 			const id = faker.random.number();
 			const item = await database.getItem(id);
 			expect(item).toBeNull();
 		});
 	});
 
-	describe("getItems", () => {
-		test("success", async () => {
+	describe('getItems', () => {
+		test('success', async () => {
 			const items = await database.getItems();
 			expect(items).toHaveLength(1);
 			expect(items).toContainEqual(prevItem);
 		});
 	});
 
-	describe("getUntweetedItems", () => {
-		test("success", async () => {
+	describe('getUntweetedItems', () => {
+		test('success', async () => {
 			const items = await database.getUntweetedItems();
 			expect(items).toHaveLength(1);
 			expect(items[0]).toEqual(prevItem);
 		});
 
-		test("success - no items", async () => {
-			const item = _.cloneDeep(prevItem);
-			item.tweet = 1;
+		test('success - no items', async () => {
+			prevItem.tweet = 1;
 
-			const res = await database.updateItem(item);
+			const res = await database.updateItem(prevItem);
 			expect(res).toBe(true);
 
 			const items = await database.getUntweetedItems();
@@ -65,9 +68,9 @@ describe("libs/Database", () => {
 		});
 	});
 
-	describe("insertItem", () => {
-		test("success", async () => {
-			const item = getRandomItem(database.defaultID);
+	describe('insertItem', () => {
+		test('success', async () => {
+			const item = getRandomItem(database.defaultId);
 
 			const res = await database.insertItem(item);
 			expect(res).toBe(true);
@@ -76,23 +79,20 @@ describe("libs/Database", () => {
 			expect(nextItem).toEqual(item);
 		});
 
-		test("failure - duplicate", async () => {
-			const item = _.cloneDeep(prevItem);
-
-			const res = await database.insertItem(item);
+		test('failure - duplicate', async () => {
+			const res = await database.insertItem(prevItem);
 			expect(res).toBe(false);
 
-			const nextItem = await database.getItem(item.id);
+			const nextItem = await database.getItem(prevItem.id);
 			expect(nextItem).toEqual(prevItem);
 		});
 	});
 
-	describe("updateItem", () => {
-		test("success", async () => {
-			const item = _.cloneDeep(prevItem);
-			item.tweet = 1;
+	describe('updateItem', () => {
+		test('success', async () => {
+			prevItem.tweet = 1;
 
-			const res = await database.updateItem(item);
+			const res = await database.updateItem(prevItem);
 			expect(res).toBe(true);
 
 			const nextItem = await database.getItem(prevItem.id);
@@ -100,17 +100,16 @@ describe("libs/Database", () => {
 			expect(nextItem!.tweet).toBe(1);
 		});
 
-		test("failure", async () => {
-			const item = _.cloneDeep(prevItem);
-			item.tweet = 1;
+		test('failure', async () => {
+			prevItem.tweet = 1;
 
 			{
-				const res = await database.updateItem(item);
+				const res = await database.updateItem(prevItem);
 				expect(res).toBe(true);
 			}
 
-			item.tweet = 0;
-			const res = await database.updateItem(item);
+			prevItem.tweet = 0;
+			const res = await database.updateItem(prevItem);
 			expect(res).toBe(false);
 
 			const nextItem = await database.getItem(prevItem.id);
@@ -119,17 +118,17 @@ describe("libs/Database", () => {
 		});
 	});
 
-	describe("getLastID", () => {
-		test("success", async () => {
-			const id = await database.getLastID();
+	describe('getLastID', () => {
+		test('success', async () => {
+			const id = await database.getLastId();
 			expect(id).toBe(prevItem.id);
 		});
 
-		test("success - default id", async () => {
+		test('success - default id', async () => {
 			await database.flush();
 
-			const id = await database.getLastID();
-			expect(id).toBe(database.defaultID);
+			const id = await database.getLastId();
+			expect(id).toBe(database.defaultId);
 		});
 	});
 });
