@@ -4,7 +4,7 @@ import { getURL, sendRequest } from '~/helpers';
 import { Item } from '~/models';
 
 export class Parser {
-	public parseItem($: CheerioStatic, e: CheerioElement): Item | null {
+	public parseItem($: cheerio.Root, e: cheerio.Element): Item | null {
 		try {
 			const column = $(e).find('td').toArray();
 

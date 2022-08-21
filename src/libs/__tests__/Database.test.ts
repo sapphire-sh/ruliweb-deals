@@ -1,11 +1,11 @@
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import IORedis from 'ioredis-mock';
 import { Item } from '~/models';
 import { Database } from '../Database';
 
 const getRandomItem = (defaultId: number): Item => {
 	return {
-		id: faker.random.number() + defaultId + 1,
+		id: faker.datatype.number() + defaultId + 1,
 		type: faker.random.alphaNumeric(8),
 		title: faker.random.alphaNumeric(8),
 		link: faker.random.alphaNumeric(8),
@@ -36,7 +36,7 @@ describe('libs/Database', () => {
 		});
 
 		test('failure - not found', async () => {
-			const id = faker.random.number();
+			const id = faker.datatype.number();
 			const item = await database.getItem(id);
 			expect(item).toBeNull();
 		});

@@ -1,4 +1,4 @@
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { BASE_URL } from '~/constants';
 import { Parameters } from '~/models';
 import { getURL } from '../getURL';
@@ -6,7 +6,7 @@ import { getURL } from '../getURL';
 describe('helpers/getURL', () => {
 	test('success', () => {
 		const parameters: Parameters = {
-			page: faker.random.number(),
+			page: faker.datatype.number(),
 		};
 
 		const url = getURL(parameters);

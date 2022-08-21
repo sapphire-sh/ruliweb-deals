@@ -3,7 +3,7 @@ import { deserializeItem, itemEquals, serializeItem } from '~/helpers';
 import { Item } from '~/models';
 
 export class Database {
-	public constructor(private readonly redis: IORedis.Redis) {}
+	public constructor(private readonly redis: IORedis) {}
 
 	public get key(): string {
 		return 'ruliweb_deals';
