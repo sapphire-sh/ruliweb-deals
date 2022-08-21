@@ -9,7 +9,7 @@ export class App {
 	private readonly tweeter: Tweeter;
 
 	public constructor() {
-		const redis = new IORedis();
+		const redis = new IORedis({ host: process.env.REDIS_HOST });
 
 		this.database = new Database(redis);
 		this.parser = new Parser();
