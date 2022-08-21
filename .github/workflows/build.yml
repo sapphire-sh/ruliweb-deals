@@ -7,7 +7,6 @@ on:
     types: [opened, reopened, synchronize]
 
 env:
-  REGISTRY: ${{ secrets.DOCKER_REGISTRY_URL }}
   IMAGE_NAME: ${{ github.event.repository.name }}
 
 jobs:
@@ -27,6 +26,7 @@ jobs:
       - uses: codecov/codecov-action@v3
 
       - run: cp config.sample.json config.json
+
       - run: npm run build
 
       - if: always()
