@@ -10,7 +10,7 @@ export class Database {
 	}
 
 	public get defaultId(): number {
-		return 65392;
+		return 70807;
 	}
 
 	public async flush(): Promise<void> {
