@@ -4,3 +4,6 @@ export const USER_AGENT =
 	'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36';
 
 export const TABLE_SELECTOR = `table.board_list_table tr.table_body:not(.notice)`;
+
+export const DEFAULT_ID_FILENAME = 'default-id.txt';
+export const LAST_ID_FILENAME = 'last-id.txt';

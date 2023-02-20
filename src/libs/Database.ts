@@ -1,92 +1,53 @@
-import IORedis from 'ioredis';
-import { deserializeItem, itemEquals, serializeItem } from '~/helpers';
+import fs from 'fs';
+import { defaultIdPath, lastIdPath } from '~/helpers';
 import { Item } from '~/models';
 
 export class Database {
-	public constructor(private readonly redis: IORedis) {}
+	#lastId: number;
 
-	public get key(): string {
-		return 'ruliweb_deals';
-	}
-
-	public get defaultId(): number {
-		return 70807;
-	}
-
-	public async flush(): Promise<void> {
-		await this.redis.flushall();
-	}
-
-	public async getItem(id: number): Promise<Item | null> {
-		const field = id.toString();
-		const res = await this.redis.hget(this.key, field);
-
-		if (res === null) {
-			return null;
+	public constructor() {
+		this.#lastId = this.readDefaultId();
+		try {
+			this.#lastId = this.readLastId();
+		} catch {
+			this.writeLastId(this.#lastId);
 		}
-		return deserializeItem(res);
 	}
 
-	public async getItems(): Promise<Item[]> {
-		const res: { [key: string]: string } = await this.redis.hgetall(this.key);
-
-		const items = Object.values(res).map((x) => deserializeItem(x));
-		return items.filter((x): x is Item => x !== null);
+	public get lastId(): number {
+		return this.#lastId;
 	}
 
-	public async getUntweetedItems(): Promise<Item[]> {
-		const items = await this.getItems();
-		return items.filter((x): x is Item => x !== null).filter((x) => x.tweet === 0);
-	}
+	private readId(path: string): number {
+		const buffer = fs.readFileSync(path);
+		const data = buffer.toString();
+		const value = parseInt(data, 10);
 
-	public async insertItem(nextItem: Item): Promise<boolean> {
-		const id = nextItem.id;
-
-		if (id <= this.defaultId) {
-			nextItem.tweet = 1;
-		}
-		const prevItem = await this.getItem(id);
-		if (prevItem !== null) {
-			if (prevItem.tweet === -1) {
-				prevItem.tweet = 0;
-				await this.updateItem(prevItem);
-			}
-			return false;
+		if (isNaN(value)) {
+			throw new Error(`invalid value: ${data}`);
 		}
 
-		const value = serializeItem(nextItem);
-		const field = nextItem.id.toString();
-		await this.redis.hset(this.key, field, value);
-
-		return true;
+		return value;
 	}
 
-	public async updateItem(nextItem: Item): Promise<boolean> {
-		const id = nextItem.id;
-
-		const prevItem = await this.getItem(id);
-		if (prevItem === null) {
-			return false;
-		}
-		if (prevItem.tweet === 1) {
-			return false;
-		}
-		if (itemEquals(prevItem, nextItem)) {
-			return false;
-		}
-
-		const value = serializeItem(nextItem);
-		const field = nextItem.id.toString();
-		await this.redis.hset(this.key, field, value);
-
-		return true;
+	private readDefaultId(): number {
+		return this.readId(defaultIdPath);
 	}
 
-	public async getLastId(): Promise<number> {
-		const items = await this.getItems();
-		if (items.length === 0) {
-			return this.defaultId;
+	private readLastId(): number {
+		return this.readId(lastIdPath);
+	}
+
+	private writeLastId(id: number) {
+		return fs.writeFileSync(lastIdPath, `${id}`);
+	}
+
+	public update(item: Item) {
+		if (item.id <= this.#lastId) {
+			return;
 		}
-		return items.sort((a, b) => a.id - b.id).pop()!.id;
+
+		this.writeLastId(item.id);
+		this.#lastId = item.id;
 	}
 }

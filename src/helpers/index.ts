@@ -2,6 +2,7 @@ import { Item } from '~/models';
 
 export * from './composeTweet';
 export * from './getURL';
+export * from './paths';
 export * from './sendRequest';
 export * from './serializeItem';
 
