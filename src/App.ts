@@ -2,6 +2,7 @@ import { sleep } from '@sapphire-sh/utils';
 import IORedis from 'ioredis';
 import schedule from 'node-schedule';
 import { Database, Parser, Tweeter } from '~/libs';
+import config from '~/config';
 
 export class App {
 	private readonly database: Database;
@@ -13,7 +14,7 @@ export class App {
 
 		this.database = new Database(redis);
 		this.parser = new Parser();
-		this.tweeter = new Tweeter(__config);
+		this.tweeter = new Tweeter(config);
 	}
 
 	private async parse(): Promise<void> {
