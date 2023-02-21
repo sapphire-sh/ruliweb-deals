@@ -20,12 +20,11 @@ jobs:
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
 
+      - run: cat config.sample.json | sed 's/"access_token",/"some_token",/' > config.json
       - run: npm ci
       - run: npm test
 
       - uses: codecov/codecov-action@v3
-
-      - run: cp config.sample.json config.json
 
       - run: npm run build
 
