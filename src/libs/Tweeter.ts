@@ -1,7 +1,6 @@
 import Twit from 'twit';
 import { composeTweet } from '~/helpers';
 import { Item } from '~/models';
-import config from '~/config';
 
 export class Tweeter {
 	private readonly twit: Twit;
@@ -15,9 +14,6 @@ export class Tweeter {
 	}
 
 	private shouldTweet(text: string): boolean {
-		if (config.access_token === 'access_token') {
-			return false;
-		}
 		const words = ['covid', '코로나'];
 		const x = text.toLowerCase();
 		for (const word of words) {
