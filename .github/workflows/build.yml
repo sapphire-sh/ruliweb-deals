@@ -20,6 +20,7 @@ jobs:
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
 
+      - run: mv config.sample.json config.json
       - run: npm ci
       - run: npm test
 
