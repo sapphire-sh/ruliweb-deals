@@ -6,8 +6,6 @@ const rootPath = path.resolve(__dirname);
 const srcPath = path.resolve(rootPath, 'src');
 const distPath = path.resolve(rootPath, 'dist');
 
-const config = require(process.env.TRAVIS === 'true' ? './config.sample' : './config');
-
 module.exports = {
 	entry: path.resolve(srcPath, 'index.ts'),
 	output: {
@@ -28,8 +26,7 @@ module.exports = {
 	},
 	plugins: [
 		new webpack.DefinePlugin({
-			__test: process.env.NODE_ENV === 'test',
-			__config: JSON.stringify(config),
+			__test: process.env.NODE_ENV === 'test'
 		}),
 	],
 	target: 'node',
